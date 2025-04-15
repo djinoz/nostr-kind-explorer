@@ -11,11 +11,13 @@ A web application that allows users to explore and analyze Nostr events by kind 
 - Connect to multiple relays simultaneously
 - Display friendly kind names where known
 
+![Explorer Panel](img/kind-explorer-panel.png)
+
 ## Installation
 
 1. Clone this repository:
    ```
-   git clone https://github.com/yourusername/nostr-kind-explorer.git
+   git clone https://github.com/djinoz/nostr-kind-explorer.git
    cd nostr-kind-explorer
    ```
 
@@ -28,6 +30,18 @@ A web application that allows users to explore and analyze Nostr events by kind 
    ```
    node kind-name-generator.js
    ```
+   
+   To avoid GitHub API rate limits, you can provide a GitHub personal access token:
+   ```
+   node kind-name-generator.js --token YOUR_GITHUB_TOKEN
+   ```
+   
+   The script will also attempt to use your git credential manager if available. If no token is provided or found, the script will continue to use the local kind definitions that are already included in the application.
+   
+   To create a GitHub personal access token:
+   1. Go to GitHub Settings > Developer settings > Personal access tokens
+   2. Generate a new token with the `public_repo` scope
+   3. Use this token with the `--token` option
 
 ## Usage
 
@@ -63,6 +77,8 @@ A web application that allows users to explore and analyze Nostr events by kind 
   - bech32 for npub/hex conversion
 - **Deployment**: Static HTML file served via http-server
 
+![Results Panel](img/results-highlight-kind.png)
+
 ## Kind Name Resolution
 
 The application includes a comprehensive mapping of Nostr event kinds to their friendly names. This mapping is based on the Nostr Implementation Possibilities (NIPs) from the [nostr-protocol/nips](https://github.com/nostr-protocol/nips) repository.
@@ -78,4 +94,5 @@ Code by Cline and Claude 3.7
 
 ## License
 
-MIT
+This plugin is released under the MIT License. See [LICENSE file for details.](https://opensource.org/license/mit)
+

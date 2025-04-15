@@ -4,10 +4,18 @@
  * Kind Name Generator
  * This script fetches kind names from the Nostr NIPs repository
  * and generates a JSON file with the mapping of kind numbers to names.
+ * 
+ * Usage:
+ *   node kind-name-generator.js [--token <github_token>]
+ * 
+ * Options:
+ *   --token <github_token>  GitHub personal access token for API authentication
+ *                          (helps avoid rate limits)
  */
 
 const fs = require('fs');
 const https = require('https');
+const { execSync } = require('child_process');
 
 // Base kinds we know
 const kindNames = {
@@ -54,6 +62,36 @@ const kindNames = {
   31990: "Handler information",
 };
 
+// Parse command line arguments
+const args = process.argv.slice(2);
+let githubToken = null;
+
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--token' && i + 1 < args.length) {
+    githubToken = args[i + 1];
+    i++; // Skip the next argument
+  }
+}
+
+// Try to get token from git credential manager if not provided
+if (!githubToken) {
+  try {
+    console.log('No GitHub token provided. Attempting to use git credential manager...');
+    const gitCredential = execSync('git credential fill', {
+      input: 'protocol=https\nhost=github.com\n\n',
+      encoding: 'utf8'
+    });
+    
+    const match = gitCredential.match(/password=([^\n]+)/);
+    if (match && match[1]) {
+      githubToken = match[1];
+      console.log('Successfully retrieved token from git credential manager.');
+    }
+  } catch (error) {
+    console.log('Could not retrieve GitHub token from git credential manager.');
+  }
+}
+
 /**
  * Make a GitHub API request
  * @param {string} url - The URL to request
@@ -67,6 +105,11 @@ function githubRequest(url) {
         'Accept': 'application/vnd.github.v3+json'
       }
     };
+    
+    // Add authorization header if token is available
+    if (githubToken) {
+      options.headers['Authorization'] = `token ${githubToken}`;
+    }
     
     https.get(url, options, (res) => {
       let data = '';
@@ -82,12 +125,18 @@ function githubRequest(url) {
           } catch (error) {
             reject(new Error(`Error parsing JSON: ${error.message}`));
           }
+        } else if (res.statusCode === 401 || res.statusCode === 403) {
+          console.error(`GitHub API rate limit exceeded (${res.statusCode}). Using local kind definitions only.`);
+          // Instead of rejecting, resolve with an empty result
+          resolve({ items: [] });
         } else {
           reject(new Error(`GitHub API error: ${res.statusCode}`));
         }
       });
     }).on('error', (err) => {
-      reject(err);
+      console.error(`Network error: ${err.message}. Using local kind definitions only.`);
+      // Instead of rejecting, resolve with an empty result
+      resolve({ items: [] });
     });
   });
 }
@@ -170,7 +219,12 @@ async function main() {
     const searchUrl = 'https://api.github.com/search/code?q=repo:nostr-protocol/nips+kind&per_page=100';
     const searchData = await githubRequest(searchUrl);
     
-    console.log(`Found ${searchData.items.length} files with kind definitions`);
+    // If we have items, process them
+    if (searchData.items && searchData.items.length > 0) {
+      console.log(`Found ${searchData.items.length} files with kind definitions`);
+    } else {
+      console.log('No files found or GitHub API rate limit exceeded. Using local kind definitions only.');
+    }
     
     // Process each result
     for (const item of searchData.items) {
@@ -198,16 +252,25 @@ async function main() {
     
     // Also update the KIND_NAMES object in kind-names.js
     const kindNamesJsPath = 'js/kind-names.js';
-    const kindNamesJs = fs.readFileSync(kindNamesJsPath, 'utf-8');
     
-    // Replace the KIND_NAMES object
-    const updatedKindNamesJs = kindNamesJs.replace(
-      /const KIND_NAMES = \{[^}]*\};/s,
-      `const KIND_NAMES = ${JSON.stringify(kindNames, null, 2)};`
-    );
+    try {
+      const kindNamesJs = fs.readFileSync(kindNamesJsPath, 'utf-8');
+      
+      // Replace the KIND_NAMES object
+      const updatedKindNamesJs = kindNamesJs.replace(
+        /const KIND_NAMES = \{[^}]*\};/s,
+        `const KIND_NAMES = ${JSON.stringify(kindNames, null, 2)};`
+      );
+      
+      fs.writeFileSync(kindNamesJsPath, updatedKindNamesJs);
+      console.log(`Updated KIND_NAMES object in ${kindNamesJsPath}`);
+    } catch (error) {
+      console.error(`Error updating kind-names.js: ${error.message}`);
+      console.log('The JSON file was updated successfully, but the JS file could not be updated.');
+    }
     
-    fs.writeFileSync(kindNamesJsPath, updatedKindNamesJs);
-    console.log(`Updated KIND_NAMES object in ${kindNamesJsPath}`);
+    console.log('Kind name generation completed successfully!');
+    console.log(`Total kinds defined: ${Object.keys(kindNames).length}`);
     
   } catch (error) {
     console.error('Error fetching kind names:', error);
