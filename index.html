@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nostr Kind Explorer</title>
+  <meta name="description" content="Explore and analyze Nostr events by kind for a specific user">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔍</text></svg>">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>Nostr Kind Explorer</h1>
+      <p>Explore and analyze Nostr events by kind for a specific user</p>
+    </header>
+
+    <section class="input-section">
+      <div class="input-box">
+        <h2>Input Parameters</h2>
+        <form id="explorer-form">
+          <div class="form-group">
+            <label for="pubkey">Nostr Public Key (npub)</label>
+            <input type="text" id="pubkey" name="pubkey" placeholder="npub..." required>
+          </div>
+          
+          <div class="form-group date-range">
+            <div class="date-input">
+              <label for="start-date">Start Date</label>
+              <input type="date" id="start-date" name="start-date">
+            </div>
+            <div class="date-input">
+              <label for="end-date">End Date</label>
+              <input type="date" id="end-date" name="end-date">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="relays">Relay List (comma separated)</label>
+            <textarea id="relays" name="relays" rows="3" placeholder="wss://relay1.com, wss://relay2.com, ..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="specific-kind">Specific Kind (optional)</label>
+            <input type="number" id="specific-kind" name="specific-kind" placeholder="e.g., 1 for text notes">
+          </div>
+          
+          <div class="form-actions">
+            <button type="submit" id="fetch-button">Fetch Events</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="status-section" id="status-section" style="display: none;">
+      <div class="status-box">
+        <div class="status-info">
+          <p id="status-message">Fetching events...</p>
+          <progress id="fetch-progress" max="100" value="0"></progress>
+        </div>
+        <div class="status-details">
+          <p id="connected-relays">Connected relays: 0/0</p>
+          <p id="events-found">Events found: 0</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="results-section" id="results-section" style="display: none;">
+      <div class="results-box">
+        <div class="results-header">
+          <h2>Results</h2>
+          <div class="stats-summary">
+            <p id="total-events">Total events: 0</p>
+            <p id="unique-kinds">Unique kinds: 0</p>
+          </div>
+        </div>
+        
+        <div class="kind-selector">
+          <label for="kind-dropdown">Select Kind:</label>
+          <select id="kind-dropdown">
+            <option value="all">All Kinds</option>
+          </select>
+        </div>
+        
+        <div class="events-container" id="events-container">
+          <!-- Events will be displayed here -->
+        </div>
+      </div>
+    </section>
+
+    <section class="error-section" id="error-section" style="display: none;">
+      <div class="error-box">
+        <h2>Error</h2>
+        <p id="error-message"></p>
+      </div>
+    </section>
+  </main>
+
+  <!-- External Libraries -->
+  <script src="https://bundle.run/buffer@6.0.3"></script>
+  <script src="https://bundle.run/bech32@2.0.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/nostr-tools@1.17.0/lib/nostr.bundle.min.js"></script>
+  
+  <!-- Application Scripts -->
+  <script src="js/relays.js"></script>
+  <script src="js/kind-names.js"></script>
+  <script src="js/event-fetcher.js"></script>
+  <script src="js/event-analyzer.js"></script>
+  <script src="js/event-display.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
