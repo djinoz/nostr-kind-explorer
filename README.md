@@ -94,5 +94,5 @@ Code by Cline and Claude 3.7
 
 ## License
 
-This plugin is released under the MIT License. See [LICENSE file for details.](https://opensource.org/license/mit)
+This utility is released under the MIT License. See [LICENSE file for details.](https://opensource.org/license/mit)
 
